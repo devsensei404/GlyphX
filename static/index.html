@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'">
+<title>GlyphX – photographs, rewritten in text</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--text:#ece7dc;--muted:#8f948e;--glass:rgba(10,14,12,.62);--edge:rgba(255,255,255,.09);--gold:#cdb27f;--gold-soft:rgba(205,178,127,.16);--gold-edge:rgba(205,178,127,.38);--field:rgba(255,255,255,.07);--danger:#e39a8b;--green:#46c878;
+--serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;--sans:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
+html{background:#000;-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;color:var(--text);font:400 16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+#rain{position:fixed;inset:0;width:100%;height:100%;z-index:-1;opacity:.55;pointer-events:none}
+main{width:100%;flex:1 0 auto;max-width:860px;margin:0 auto;display:grid;gap:16px;padding:max(56px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(48px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+h1{margin:0;text-align:center;font:500 clamp(56px,13vw,104px)/1 var(--serif);letter-spacing:.04em;color:var(--text)}
+.sub{margin:0 0 20px;text-align:center;color:var(--muted);font-weight:400;letter-spacing:.12em;text-transform:uppercase;font-size:clamp(11px,2.8vw,13px)}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border:1px solid var(--edge);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.drop{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;padding:38px 20px;text-align:center;border:1px dashed var(--gold-edge);transition:border-color .2s,background .2s}
+.drop:hover,.drop.over{border-style:solid;border-color:var(--gold)}
+.drop b{display:block;font:500 26px/1.2 var(--serif);letter-spacing:.02em}
+.drop small{color:var(--muted);font-size:12px;letter-spacing:.06em}
+.thumb{width:64px;height:64px;border-radius:12px;object-fit:cover;border:1px solid var(--edge)}
+.controls{display:grid;padding:6px 22px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:14px 0}
+.row+.row{border-top:1px solid var(--edge)}
+.row>span{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+input[type=range]{min-width:0;height:32px;accent-color:var(--gold)}
+.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--field)}
+.seg button{border:1px solid transparent;background:none;min-height:40px;padding:0 22px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--gold-soft);border-color:var(--gold-edge);color:var(--gold)}
+button:disabled,input:disabled{opacity:.45;cursor:default}
+.msg{display:flex;align-items:center;justify-content:center;gap:10px;min-height:24px;margin:0;color:var(--muted);font-size:14px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--field);border-top-color:var(--gold);animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none;border-color:var(--gold)}.drop{transition:none}}
+.err{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;color:var(--danger);font-size:14px;border-radius:16px}
+.err button{border:0;background:var(--gold);color:#14110a;min-height:38px;padding:0 20px;border-radius:980px;font-size:14px;font-weight:600}
+.out{padding:20px;overflow:hidden;background:rgba(5,7,6,.84)}
+#stage{width:100%;overflow:hidden}#stage canvas{display:block;margin:0 auto}#stage pre{margin:0 auto;width:max-content;color:var(--text)}
+.res{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 12px;padding:18px 0 14px}
+.res label{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.res output{color:var(--gold);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.res input[type=range]{grid-column:1/-1;width:100%}
+.res .ends{grid-column:1/-1;display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.res+.row{border-top:1px solid var(--edge)}
+.samples{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px 16px}
+.samples>span{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+#sampleRow{display:flex;gap:10px}
+.sample{width:56px;height:56px;padding:0;overflow:hidden;border:1px solid var(--edge);border-radius:12px;background:var(--field);transition:border-color .2s,transform .2s}
+.sample:hover{border-color:var(--gold);transform:translateY(-2px)}
+.sample img{display:block;width:100%;height:100%;object-fit:cover}
+@media (max-width:560px){.drop{padding:30px 16px;flex-direction:column}.drop b{font-size:24px}.controls{padding:4px 16px}.out{padding:12px;border-radius:18px}.seg{width:100%}.seg button{flex:1}}
+.dl{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px}
+.dl button{min-height:42px;padding:0 22px;border-radius:980px;font-size:14px;font-weight:600;border:1px solid var(--gold-edge);background:var(--gold-soft);color:var(--gold);transition:background .2s}
+.dl button:first-child{background:var(--gold);color:#14110a;border-color:var(--gold)}
+.dl button:hover:not(:disabled){filter:brightness(1.1)}
+@media (max-width:560px){.dl button{flex:1}}
+.site{margin-top:24px;padding:40px max(20px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:linear-gradient(to bottom,transparent,rgba(0,0,0,.72) 45%)}
+.site-in{max-width:860px;margin:0 auto}
+.fgrid{display:grid;grid-template-columns:1fr auto;gap:24px 48px;align-items:start}
+.fbrand .tag{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin:0;color:var(--muted);font-size:14px}
+.fbrand b{font:500 30px/1.1 var(--serif);letter-spacing:.06em;color:var(--text)}
+.fbrand .sep{opacity:.6}
+.priv{display:flex;align-items:flex-start;gap:6px;margin:12px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.priv svg{flex:none;width:12px;height:12px;margin-top:2px;color:var(--green)}
+.fnav{display:flex;flex-direction:column;gap:2px}
+.site a{color:var(--muted);text-decoration:none;transition:color .2s}
+.site a:hover{color:var(--green)}
+.fnav a{display:inline-flex;align-items:center;min-height:32px;font-size:14px;letter-spacing:.04em}
+.fbase{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 24px;margin-top:28px;padding-top:18px;border-top:1px solid rgba(70,200,120,.2);color:var(--muted);font-size:14px;letter-spacing:.03em}
+.fbase .heart{color:var(--green)}
+.fbase a{color:var(--text)}
+@media (max-width:640px){.fgrid{grid-template-columns:1fr;gap:20px}.fnav{flex-direction:row;flex-wrap:wrap;gap:0 24px}.fnav a{min-height:44px}.fbase{flex-direction:column;gap:4px}.site{padding-top:32px}}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<main>
+  <h1>GlyphX</h1>
+  <p class="sub">Rewrite any photograph in glyphs</p>
+
+  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" autocomplete="off" hidden>
+  <button id="drop" type="button" class="glass drop">
+    <img id="thumb" class="thumb" alt="Selected image preview" hidden>
+    <span><b id="dropTitle">Drop an image here</b><small>JPEG · PNG · WEBP · GIF · BMP</small></span>
+  </button>
+
+  <div id="samples" class="samples" hidden><span>Or try a sample</span><div id="sampleRow"></div></div>
+
+  <div class="glass controls">
+    <div class="res">
+      <label for="w">Resolution</label><output id="wv" for="w" aria-live="off">120</output>
+      <input id="w" type="range" min="20" max="300" step="5" value="120" autocomplete="off">
+      <div class="ends"><span>Coarse</span><span>Fine</span></div>
+    </div>
+    <div class="row"><span>Mode</span><div class="seg" role="group" aria-label="Color mode"><button type="button" data-v="false" aria-pressed="true">Mono</button><button type="button" data-v="true" aria-pressed="false">Color</button></div></div>
+  </div>
+
+  <p class="msg" role="status" aria-live="polite"><span id="spin" class="spin" hidden></span><span id="status"></span></p>
+  <div id="err" class="glass err" role="alert" hidden><span id="errMsg"></span><button id="retry" type="button">Retry</button></div>
+
+  <section id="out" class="glass out" aria-label="ASCII result" hidden><div id="stage"></div><div class="dl"><button id="dlPng" type="button">Download PNG</button><button id="dlJpg" type="button">Download JPEG</button></div></section>
+</main>
+
+<footer class="site">
+  <div class="site-in">
+    <div class="fgrid">
+      <div class="fbrand">
+        <p class="tag"><b>GlyphX</b><span class="sep" aria-hidden="true">-</span><span>Turning pixels into characters.</span></p>
+        <p class="priv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Images are sent to the server only to be converted. They are processed in memory and never stored.</span></p>
+      </div>
+      <nav class="fnav" aria-label="Project links">
+        <a href="https://github.com/devsensei404/GlyphX" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/devsensei404/GlyphX/issues" target="_blank" rel="noopener noreferrer">Feedback</a>
+      </nav>
+    </div>
+    <div class="fbase">
+      <span>Crafted with <span class="heart" role="img" aria-label="love">&hearts;</span> by <a href="https://github.com/devsensei404" target="_blank" rel="noopener noreferrer">@devsensei404</a></span>
+      <span>&copy; <span id="yr">2026</span> GlyphX. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const drop = $('#drop'), fileIn = $('#file'), thumb = $('#thumb'), title = $('#dropTitle'),
+        w = $('#w'), wv = $('#wv'), segs = [...document.querySelectorAll('.seg button')],
+        status = $('#status'), spin = $('#spin'), err = $('#err'), errMsg = $('#errMsg'), retry = $('#retry'),
+        out = $('#out'), stage = $('#stage'), bg = $('#rain'), bx = bg.getContext('2d');
+  const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
+  const MAX_BYTES = 4 * 1024 * 1024;
+  const FONT = '"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace';
+  const IDLE = matchMedia('(pointer:coarse)').matches ? 'Tap to choose an image' : 'Drop an image here';
+  let color = 'false', file = null, url = null, ctl = null, timer = 0, seq = 0, last = null, ratio = 0;
+  title.textContent = IDLE;
+  $('#yr').textContent = new Date().getFullYear();
+
+  const setStatus = t => { status.textContent = t; };
+  const clearError = () => { err.hidden = true; };
+  const showError = (m, canRetry) => { errMsg.textContent = m; retry.hidden = !canRetry; err.hidden = false; };
+  const setBusy = b => { w.disabled = b; segs.forEach(s => s.disabled = b); $('#dlPng').disabled = $('#dlJpg').disabled = b; spin.hidden = !b; };
+  const schedule = () => { if (!file) return; clearTimeout(timer); timer = setTimeout(convert, 600); };
+
+  function glyphRatio() {
+    if (ratio) return ratio;
+    const s = document.createElement('span');
+    s.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:100px ' + FONT;
+    s.textContent = 'M'.repeat(50);
+    document.body.appendChild(s);
+    ratio = s.getBoundingClientRect().width / 5000 || 0.6;
+    s.remove();
+    return ratio;
+  }
+
+  const SHADE = Array.from({ length: 256 }, (_, L) => 'rgb(' + L + ',' + Math.round(L * 0.985) + ',' + Math.round(L * 0.95) + ')');
+
+  function shades(rows) {                          // per-cell brightness 0..1, contrast-stretched
+    const lum = rows.map(row => row.map(p => (0.299 * p.rgb[0] + 0.587 * p.rgb[1] + 0.114 * p.rgb[2]) / 255));
+    const all = Float32Array.from(lum.flat()).sort();
+    const lo = all[Math.floor(all.length * 0.02)], hi = all[Math.floor(all.length * 0.98)];
+    const span = Math.max(hi - lo, 0.05);
+    return lum.map(row => row.map(v => Math.min(1, Math.max(0, (v - lo) / span))));
+  }
+
+  function render(fs, dpr, bgFill, pad) {          // shared by on-screen draw and export
+    const r = glyphRatio(), cols = last.width, mono = color === 'false';
+    const cw = fs * r, ch = cw * 2;
+    if (mono && !last.shade) last.shade = shades(last.rows);
+    const c = document.createElement('canvas');
+    c.width = Math.ceil((cols * cw + 2 * pad) * dpr); c.height = Math.ceil((last.height * ch + 2 * pad) * dpr);
+    const g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    if (bgFill) { g.fillStyle = bgFill; g.fillRect(0, 0, c.width / dpr, c.height / dpr); }
+    g.font = fs + 'px ' + FONT; g.textBaseline = 'middle';
+    last.rows.forEach((row, y) => row.forEach((p, x) => {
+      if (p.char === ' ') return;
+      g.fillStyle = mono
+        ? SHADE[Math.round(48 + 207 * Math.pow(last.shade[y][x], 0.85))]
+        : 'rgb(' + p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2] + ')';
+      g.fillText(p.char, pad + x * cw, pad + (y + 0.5) * ch);
+    }));
+    return { c, w: cols * cw, h: last.height * ch };
+  }
+
+  function draw() {
+    if (!last) return;
+    const r = glyphRatio();
+    const fs = Math.min(stage.clientWidth / (last.width * r), 16);
+    const { c, w: cssW, h: cssH } = render(fs, window.devicePixelRatio || 1, null, 0);
+    c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+    stage.textContent = '';
+    stage.appendChild(c);
+  }
+
+  function download(type, ext) {                   // re-renders at high resolution on a solid background
+    if (!last) return;
+    const FS = 14, PAD = 28, BG = '#050706';
+    const r = glyphRatio(), cw = FS * r;
+    const natW = last.width * cw + 2 * PAD, natH = last.height * cw * 2 + 2 * PAD;
+    const dpr = Math.max(1, Math.min(2, 8000 / Math.max(natW, natH)));
+    const { c } = render(FS, dpr, BG, PAD);
+    c.toBlob(blob => {
+      if (!blob) return showError('Could not create the image. Try a lower resolution.', false);
+      const a = document.createElement('a'), u = URL.createObjectURL(blob);
+      a.href = u; a.download = 'glyphx-' + (color === 'true' ? 'color' : 'mono') + '.' + ext;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 1000);
+    }, type, 0.92);
+  }
+
+  async function convert() {
+    if (!file) return;
+    clearTimeout(timer);
+    if (ctl) ctl.abort();
+    ctl = new AbortController();
+    const my = ++seq, fd = new FormData();
+    fd.append('image', file); fd.append('width', w.value);
+    fd.append('color', 'true'); fd.append('dark_background', 'true');   // always fetch colour data; Mono is shaded from it
+    setBusy(true); clearError(); setStatus('Converting…');
+    try {
+      const res = await fetch('/api/convert', { method: 'POST', body: fd, signal: ctl.signal });
+      const text = await res.text();
+      let j = null; try { j = JSON.parse(text); } catch (e) { /* non-JSON body */ }
+      if (my !== seq) return;
+      if (!res.ok || !j || !j.rows) {
+        throw { msg: (j && j.error) || 'Server error (' + res.status + '). Please try again.', retry: res.status >= 500 || !j };
+      }
+      last = j; out.hidden = false; draw(); setStatus('');
+    } catch (e) {
+      if (my !== seq || e.name === 'AbortError') return;
+      showError(e.msg || 'Network problem. Check your connection and try again.', e.retry !== false);
+      setStatus('');
+    } finally {
+      if (my === seq) setBusy(false);
+    }
+  }
+
+  async function shrink(f) {                       // phone photos can exceed the 4 MB limit
+    try {
+      const bmp = await createImageBitmap(f);
+      const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      if (bmp.close) bmp.close();
+      const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+      return blob && blob.size <= MAX_BYTES ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : null;
+    } catch (e) { return null; }
+  }
+
+  async function pick(f) {
+    const okType = TYPES.includes(f.type) || (!f.type && /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name));
+    if (!okType) return showError('Please choose a JPEG, PNG, WEBP, GIF or BMP image.', false);
+    if (f.size === 0) return showError('That file is empty.', false);
+    if (f.size > MAX_BYTES) {
+      clearError(); setStatus('Resizing large photo…');
+      f = await shrink(f); setStatus('');
+      if (!f) return showError('That image is too large to process. Please choose a smaller one.', false);
+    }
+    file = f;
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(f);
+    thumb.src = url; thumb.hidden = false; title.textContent = 'Choose another image';
+    last = null; out.hidden = true; stage.textContent = '';
+    convert();
+  }
+
+  function reset() {
+    seq++; if (ctl) ctl.abort(); clearTimeout(timer);
+    if (url) URL.revokeObjectURL(url);
+    url = file = last = null; color = 'false';
+    thumb.hidden = true; thumb.removeAttribute('src'); title.textContent = IDLE;
+    out.hidden = true; stage.textContent = '';
+    w.value = 120; wv.textContent = '120';
+    segs.forEach(s => s.setAttribute('aria-pressed', String(s.dataset.v === color)));
+    clearError(); setStatus(''); setBusy(false);
+  }
+
+  // Sample photos: put JPEGs in static/samples/ and list their names here.
+  const SAMPLES = ['sample-1.jpg', 'sample-2.jpg', 'sample-3.jpg'];
+  const samples = $('#samples'), sampleRow = $('#sampleRow');
+  SAMPLES.forEach((name, i) => {
+    const b = document.createElement('button'), im = document.createElement('img');
+    b.type = 'button'; b.className = 'sample'; b.setAttribute('aria-label', 'Use sample photo ' + (i + 1));
+    im.alt = ''; im.decoding = 'async'; im.src = '/static/samples/' + name;
+    im.addEventListener('load', () => { samples.hidden = false; });
+    im.addEventListener('error', () => { b.remove(); if (!sampleRow.children.length) samples.hidden = true; });
+    b.addEventListener('click', async () => {
+      try {
+        const r = await fetch(im.src);
+        if (!r.ok) throw new Error('missing');
+        const blob = await r.blob();
+        pick(new File([blob], name, { type: blob.type || 'image/jpeg' }));
+      } catch (e) { showError('Could not load the sample photo.', false); }
+    });
+    b.appendChild(im); sampleRow.appendChild(b);
+  });
+
+  drop.addEventListener('click', () => fileIn.click());
+  fileIn.addEventListener('change', () => { const f = fileIn.files[0]; fileIn.value = ''; if (f) pick(f); });
+  document.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  document.addEventListener('dragleave', e => { if (!e.relatedTarget) drop.classList.remove('over'); });
+  document.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('over');
+    const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) pick(f);
+  });
+  document.addEventListener('paste', e => {
+    const f = e.clipboardData && e.clipboardData.files[0]; if (f) pick(f);
+  });
+  w.addEventListener('input', () => { wv.textContent = w.value; });
+  w.addEventListener('change', schedule);
+  segs.forEach(b => b.addEventListener('click', () => {
+    if (b.getAttribute('aria-pressed') === 'true') return;
+    segs.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    color = b.dataset.v;
+    draw();
+  }));
+  retry.addEventListener('click', convert);
+  $('#dlPng').addEventListener('click', () => download('image/png', 'png'));
+  $('#dlJpg').addEventListener('click', () => download('image/jpeg', 'jpg'));
+  window.addEventListener('pageshow', e => { if (e.persisted) reset(); });
+
+  // Matrix-style background: 0s and 1s falling in alternating columns.
+  const CELL = 18, still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let cols = 0, rows = [], speed = [], lastT = 0;
+  function sizeRain() {
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    bg.width = innerWidth * d; bg.height = innerHeight * d;
+    bx.setTransform(d, 0, 0, d, 0, 0);
+    bx.fillStyle = '#000'; bx.fillRect(0, 0, innerWidth, innerHeight);
+    bx.font = (CELL - 4) + 'px ' + FONT; bx.textBaseline = 'top';
+    cols = Math.ceil(innerWidth / CELL);
+    rows = Array.from({ length: cols }, () => -Math.random() * innerHeight / CELL);
+    speed = Array.from({ length: cols }, () => 0.25 + Math.random() * 0.5);
+  }
+  function step() {
+    bx.fillStyle = 'rgba(0,0,0,.08)'; bx.fillRect(0, 0, innerWidth, innerHeight);
+    for (let i = 0; i < cols; i++) {
+      const r = Math.floor(rows[i]);
+      if (r >= 0) {
+        bx.fillStyle = 'rgb(70,200,120)';
+        bx.fillText((i + r) % 2 ? '1' : '0', i * CELL, r * CELL);
+      }
+      rows[i] += speed[i];
+      if (rows[i] * CELL > innerHeight && Math.random() > 0.975) rows[i] = -Math.random() * 20;
+    }
+  }
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (t - lastT < 45) return;
+    lastT = t; step();
+  }
+  sizeRain();
+  if (still) { for (let k = 0; k < 120; k++) step(); } else requestAnimationFrame(loop);
+
+  let raf = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => { sizeRain(); draw(); });
+  });
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('16px "JetBrains Mono"').then(() => { ratio = 0; sizeRain(); draw(); }).catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
