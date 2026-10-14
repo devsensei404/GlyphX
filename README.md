@@ -19,7 +19,7 @@ Nothing is stored: uploads are processed in memory only and vanish when the requ
     ├── app.py               Flask backend (/api/convert, /healthz)
     ├── ascii_engine.py      Image to ASCII conversion engine
     ├── requirements.txt
-    ├── static/
+    ├── public/
     │   ├── index.html       Single-page frontend
     │   ├── samples/         Sample images
     │   └── (icons)          favicon.svg, favicon.ico, apple-touch-icon.png
@@ -52,6 +52,10 @@ Success: `{"mode", "width", "height", "rows"}`
 Errors: `{"error": "..."}` with status 400, 413, 415, 500 or 503.
 
 `GET /healthz` returns `{"status": "ok"}`
+
+## Deploy to Vercel
+
+Import the repo at vercel.com/new. Vercel detects Flask automatically (no config needed) and serves `public/` from its CDN.
 
 ## Deploy to Azure App Service (Linux, Python 3.11, F1)
 

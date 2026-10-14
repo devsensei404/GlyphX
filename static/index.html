@@ -7,9 +7,9 @@
 <meta name="color-scheme" content="dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'">
 <title>GlyphX – photographs, rewritten in text</title>
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/static/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -288,13 +288,13 @@ button:disabled,input:disabled{opacity:.45;cursor:default}
     clearError(); setStatus(''); setBusy(false);
   }
 
-  // Sample photos: put JPEGs in static/samples/ and list their names here.
+  // Sample photos: put JPEGs in public/samples/ and list their names here.
   const SAMPLES = ['sample-1.jpg', 'sample-2.jpg', 'sample-3.jpg'];
   const samples = $('#samples'), sampleRow = $('#sampleRow');
   SAMPLES.forEach((name, i) => {
     const b = document.createElement('button'), im = document.createElement('img');
     b.type = 'button'; b.className = 'sample'; b.setAttribute('aria-label', 'Use sample photo ' + (i + 1));
-    im.alt = ''; im.decoding = 'async'; im.src = '/static/samples/' + name;
+    im.alt = ''; im.decoding = 'async'; im.src = '/samples/' + name;
     im.addEventListener('load', () => { samples.hidden = false; });
     im.addEventListener('error', () => { b.remove(); if (!sampleRow.children.length) samples.hidden = true; });
     b.addEventListener('click', async () => {

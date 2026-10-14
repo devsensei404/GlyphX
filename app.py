@@ -1,6 +1,6 @@
 """app.py - Flask backend: upload an image, get ASCII art back.
 
-Designed for Azure App Service (Linux, Python 3.11, free F1 plan).
+Designed for Vercel (zero-config Flask) or Azure App Service (Linux, Python 3.11).
 Nothing is persisted: uploads are parsed and processed entirely in memory,
 nothing is written to disk, and no filenames or image data are logged.
 
@@ -13,7 +13,7 @@ import io
 import os
 import threading
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory
 from PIL import Image, UnidentifiedImageError
 from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 
@@ -44,7 +44,10 @@ class InMemoryRequest(Flask.request_class):
         return io.BytesIO()
 
 
-app = Flask(__name__, static_folder="static", static_url_path="/static")
+# Static files live in public/. Vercel serves public/** from its CDN; the explicit
+# routes below do the same job when running locally or on Azure.
+app = Flask(__name__, static_folder=None)
+app.static_folder = os.path.join(app.root_path, "public")
 app.request_class = InMemoryRequest
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES + _MULTIPART_OVERHEAD
 
@@ -145,6 +148,21 @@ def _decode_image(data: bytes) -> Image.Image:
 @app.get("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.get("/samples/<path:filename>")
+def sample(filename):
+    return send_from_directory(os.path.join(app.static_folder, "samples"), filename)
+
+
+ICON_FILES = {"favicon.svg", "favicon.ico", "apple-touch-icon.png"}
+
+
+@app.get("/<filename>")
+def icon(filename):
+    if filename not in ICON_FILES:
+        abort(404)
+    return send_from_directory(app.static_folder, filename)
 
 
 @app.get("/healthz")
