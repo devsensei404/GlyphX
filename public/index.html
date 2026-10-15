@@ -82,6 +82,17 @@ button:disabled,input:disabled{opacity:.45;cursor:default}
 .fbase .heart{color:var(--green)}
 .fbase a{color:var(--text)}
 @media (max-width:640px){.fgrid{grid-template-columns:1fr;gap:20px}.fnav{flex-direction:row;flex-wrap:wrap;gap:0 24px}.fnav a{min-height:44px}.fbase{flex-direction:column;gap:4px}.site{padding-top:32px}}
+dialog{width:min(92vw,480px);padding:0;border:1px solid var(--edge);border-radius:22px;background:rgba(10,12,11,.97);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(0,0,0,.62);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.sheet{display:grid;gap:10px;padding:22px}
+.sheet h2{margin:0 0 6px;text-align:center;font:500 26px/1.2 var(--serif);letter-spacing:.02em}
+.opt{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 18px;border-radius:14px;border:1px solid var(--gold-edge);background:var(--gold-soft);color:var(--gold);font-size:15px;font-weight:600;text-align:left}
+.opt svg{width:20px;height:20px;flex:none}
+.opt.ghost{justify-content:center;background:none;border-color:var(--edge);color:var(--muted)}
+.opt:hover{filter:brightness(1.1)}
+.cam video{width:100%;max-height:60vh;border-radius:14px;background:#000;object-fit:cover}
+.cam .acts{display:flex;gap:10px}
+.cam .acts .opt{flex:1;justify-content:center}
 </style>
 </head>
 <body>
@@ -95,6 +106,8 @@ button:disabled,input:disabled{opacity:.45;cursor:default}
     <img id="thumb" class="thumb" alt="Selected image preview" hidden>
     <span><b id="dropTitle">Drop an image here</b><small>JPEG · PNG · WEBP · GIF · BMP</small></span>
   </button>
+
+  <input id="camIn" type="file" accept="image/*" capture="environment" hidden>
 
   <div id="samples" class="samples" hidden><span>Or try a sample</span><div id="sampleRow"></div></div>
 
@@ -112,6 +125,26 @@ button:disabled,input:disabled{opacity:.45;cursor:default}
 
   <section id="out" class="glass out" aria-label="ASCII result" hidden><div id="stage"></div><div class="dl"><button id="dlPng" type="button">Download PNG</button><button id="dlJpg" type="button">Download JPEG</button></div></section>
 </main>
+
+<dialog id="choose" aria-labelledby="chooseT">
+  <div class="sheet">
+    <h2 id="chooseT">Add a photo</h2>
+    <button class="opt" id="optFile" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Choose from files</button>
+    <button class="opt" id="optCam" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>Take a photo</button>
+    <button class="opt ghost" id="optCancel" type="button">Cancel</button>
+  </div>
+</dialog>
+
+<dialog id="cam" aria-labelledby="camT">
+  <div class="sheet cam">
+    <h2 id="camT">Take a photo</h2>
+    <video id="camVid" autoplay playsinline muted></video>
+    <div class="acts">
+      <button class="opt ghost" id="camCancel" type="button">Cancel</button>
+      <button class="opt" id="camShot" type="button">Capture</button>
+    </div>
+  </div>
+</dialog>
 
 <footer class="site">
   <div class="site-in">
@@ -308,7 +341,43 @@ button:disabled,input:disabled{opacity:.45;cursor:default}
     b.appendChild(im); sampleRow.appendChild(b);
   });
 
-  drop.addEventListener('click', () => fileIn.click());
+  const choose = $('#choose'), camDlg = $('#cam'), camVid = $('#camVid'), camIn = $('#camIn');
+  let stream = null;
+  const stopStream = () => { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } camVid.srcObject = null; };
+
+  async function openCamera() {
+    // Phones/tablets: hand off to the native camera app (best quality, no live-preview needed).
+    if (matchMedia('(pointer: coarse)').matches || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+      camIn.click(); return;
+    }
+    try {                                          // Desktop: live webcam preview
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      camVid.srcObject = stream;
+      camDlg.showModal();
+      camVid.play().catch(() => {});
+    } catch (e) {
+      stopStream();
+      showError(e && e.name === 'NotAllowedError'
+        ? 'Camera access was blocked. Allow camera permission in your browser and try again.'
+        : 'No camera was found on this device.', false);
+    }
+  }
+
+  drop.addEventListener('click', () => choose.showModal());
+  choose.addEventListener('click', e => { if (e.target === choose) choose.close(); });
+  $('#optCancel').addEventListener('click', () => choose.close());
+  $('#optFile').addEventListener('click', () => { choose.close(); fileIn.click(); });
+  $('#optCam').addEventListener('click', () => { choose.close(); openCamera(); });
+  camIn.addEventListener('change', () => { const f = camIn.files[0]; camIn.value = ''; if (f) pick(f); });
+  camDlg.addEventListener('close', stopStream);    // also fires on Esc
+  $('#camCancel').addEventListener('click', () => camDlg.close());
+  $('#camShot').addEventListener('click', () => {
+    const vw = camVid.videoWidth, vh = camVid.videoHeight;
+    if (!vw || !vh) return;
+    const c = document.createElement('canvas'); c.width = vw; c.height = vh;
+    c.getContext('2d').drawImage(camVid, 0, 0, vw, vh);
+    c.toBlob(b => { camDlg.close(); if (b) pick(new File([b], 'camera.jpg', { type: 'image/jpeg' })); }, 'image/jpeg', 0.92);
+  });
   fileIn.addEventListener('change', () => { const f = fileIn.files[0]; fileIn.value = ''; if (f) pick(f); });
   document.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
   document.addEventListener('dragleave', e => { if (!e.relatedTarget) drop.classList.remove('over'); });
